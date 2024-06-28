@@ -1,8 +1,11 @@
 using JwtAspNet;
+using JwtAspNet.Extensions;
 using JwtAspNet.Models;
 using JwtAspNet.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,8 +37,7 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/", (TokenService service)
-=>
+app.MapGet("/", (TokenService service) =>
 {
     var usuario = new Usuario(
                 1,
@@ -47,10 +49,16 @@ app.MapGet("/", (TokenService service)
     return service.Create(usuario);
 });
 
-app.MapGet("/restrito", () => "Autorizado")
-    .RequireAuthorization("Premium");
+app.MapGet("/restrito", (ClaimsPrincipal user) => new
+{
+    id = user.GetId(),
+    email = user.GetEmail(),
+    name = user.GetName(),
+    givenName = user.GetGivenName()
+})
+    .RequireAuthorization();
 
-app.MapGet("/admin", () => "Sucesso")
+app.MapGet("/admin", () => "Você tem acesso")
     .RequireAuthorization("Admin");
 
 app.Run();
