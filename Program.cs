@@ -23,8 +23,12 @@ builder.Services
             ValidateAudience = false
         };
     });
-builder.Services.AddAuthorization();
 
+builder.Services.AddAuthorization(x =>
+{
+    x.AddPolicy("Admin", policy => policy.RequireRole("admin"));
+    x.AddPolicy("Premium", policy => policy.RequireRole("premium"));
+});
 
 var app = builder.Build();
 app.UseAuthentication();
@@ -44,6 +48,9 @@ app.MapGet("/", (TokenService service)
 });
 
 app.MapGet("/restrito", () => "Autorizado")
-    .RequireAuthorization();
+    .RequireAuthorization("Premium");
+
+app.MapGet("/admin", () => "Sucesso")
+    .RequireAuthorization("Admin");
 
 app.Run();
